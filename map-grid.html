@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI 파생 섹터맵 · 허브-스포크 그리드 | OREUN</title>
+<style>
+:root{
+  --bg:#0a0f1f; --bg2:#0e1730; --line:#1e2a4a;
+  --gold:#d4af37; --gold2:#caa83c; --ink:#e9eef9; --muted:#93a0c0;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Pretendard','Apple SD Gothic Neo',-apple-system,system-ui,sans-serif;
+  background:radial-gradient(circle at 32% 12%, #12193c 0%, #0a0f1f 62%);
+  color:var(--ink);min-height:100vh;}
+
+/* ── header ── */
+header{padding:16px 28px;border-bottom:1px solid var(--line);display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+header h1{font-size:20px;letter-spacing:.3px}
+header .badge{color:var(--gold);font-weight:800;letter-spacing:1px}
+header .sub{color:var(--muted);font-size:13px}
+
+/* ── hub banner ── */
+.hub{max-width:1320px;margin:26px auto 6px;padding:0 24px;display:flex;align-items:center;gap:22px;flex-wrap:wrap}
+.hub .core{display:flex;align-items:center;justify-content:center;width:104px;height:104px;flex:0 0 auto;
+  border-radius:50%;background:radial-gradient(circle at 38% 32%, #1d2b5a 0%, #0c1430 100%);
+  border:2.2px solid var(--gold);box-shadow:0 0 26px rgba(212,175,55,.34);flex-direction:column;gap:2px}
+.hub .core b{color:var(--gold);font-size:32px;font-weight:800;letter-spacing:1px;line-height:1}
+.hub .core span{color:#c3cde6;font-size:10.5px;font-weight:500}
+.hub .htxt{flex:1 1 320px;min-width:260px}
+.hub .htxt .ph{color:var(--muted);font-size:12.5px;letter-spacing:.3px;margin-bottom:4px}
+.hub .htxt h2{font-size:22px;color:var(--gold);margin-bottom:7px;line-height:1.2}
+.hub .htxt p{font-size:13.5px;line-height:1.6;color:#cdd6ec;max-width:880px}
+
+/* ── grid ── */
+.grid{max-width:1320px;margin:18px auto 12px;padding:0 24px 12px;
+  display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+@media(max-width:1080px){.grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:680px){.grid{grid-template-columns:1fr}}
+
+.card{position:relative;background:linear-gradient(180deg,#0e1730 0%,#0b1226 100%);
+  border:1px solid var(--line);border-radius:14px;overflow:hidden;cursor:pointer;
+  transition:transform .16s, box-shadow .16s, border-color .16s;display:flex;flex-direction:column;min-height:248px}
+.card:hover{transform:translateY(-3px);box-shadow:0 10px 26px rgba(0,0,0,.42)}
+.card .bar{height:5px;width:100%}
+.card.hidden{border-style:dashed;border-color:#5a3a48}
+.card .body{padding:15px 17px 16px;display:flex;flex-direction:column;flex:1}
+.card .top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:3px}
+.card h3{font-size:16.5px;line-height:1.25;font-weight:700}
+.card .num{flex:0 0 auto;font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;
+  background:#14203f;border:1px solid var(--line);color:#aebbdc;white-space:nowrap}
+.card .meta{font-size:12.5px;font-style:italic;margin:1px 0 9px}
+.card .nar{font-size:12.5px;line-height:1.55;color:#aeb9d6;
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:11px}
+.card .reps{margin-top:auto;display:flex;flex-direction:column;gap:5px}
+.card .reps .rlabel{font-size:10px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-bottom:1px}
+.card .stk{display:flex;align-items:baseline;gap:7px;font-size:12.5px;line-height:1.3}
+.card .stk .nm{font-weight:600;color:#dde4f5;white-space:nowrap}
+.card .stk .tk{font-variant-numeric:tabular-nums;font-size:11.5px}
+.card .more{font-size:11px;color:var(--muted);margin-top:3px}
+.card .hbadge{position:absolute;top:13px;right:14px;font-size:10px;font-weight:700;letter-spacing:.6px;
+  padding:2px 8px;border-radius:20px;background:rgba(229,96,122,.14);border:1px dashed #e5607a;color:#e98ba0}
+.card.hidden .top{padding-right:54px}
+
+/* ── footer note ── */
+.foot{max-width:1320px;margin:0 auto 34px;padding:0 24px}
+.note{color:#e8b84b;font-size:12px;line-height:1.55;
+  background:rgba(232,184,75,.08);border:1px solid rgba(232,184,75,.25);border-radius:8px;padding:11px 14px}
+.legend{max-width:1320px;margin:2px auto 12px;padding:0 24px;display:flex;flex-wrap:wrap;gap:7px 14px}
+.legend .lg{font-size:11.5px;color:#aab6d6;display:flex;align-items:center;gap:6px}
+.legend .dot{width:10px;height:10px;border-radius:50%}
+.legend .dash{width:15px;height:0;border-top:2px dashed #e5607a}
+
+/* ── modal ── */
+.scrim{position:fixed;inset:0;background:rgba(4,7,16,.72);backdrop-filter:blur(3px);
+  display:none;align-items:flex-start;justify-content:center;z-index:50;padding:42px 18px}
+.scrim.on{display:flex}
+.modal{background:rgba(10,15,30,.97);border:1px solid var(--line);border-radius:16px;
+  max-width:680px;width:100%;max-height:calc(100vh - 84px);overflow-y:auto;
+  box-shadow:0 24px 60px rgba(0,0,0,.6);position:relative}
+.modal .mbar{height:6px;width:100%;border-radius:16px 16px 0 0}
+.modal .mbody{padding:24px 26px 28px}
+.modal .x{position:absolute;top:14px;right:16px;width:30px;height:30px;border-radius:50%;
+  border:1px solid var(--line);background:#121b34;color:var(--muted);font-size:17px;line-height:1;
+  cursor:pointer;display:flex;align-items:center;justify-content:center}
+.modal .x:hover{color:var(--ink);border-color:var(--gold)}
+.modal .ph{color:var(--muted);font-size:12.5px;margin-bottom:8px;letter-spacing:.3px}
+.modal h2{font-size:24px;margin-bottom:4px;line-height:1.2}
+.modal .mmeta{font-size:14px;margin-bottom:10px;font-style:italic}
+.tier{display:inline-block;font-size:11px;padding:2px 10px;border:1px solid var(--gold);
+  color:var(--gold);border-radius:20px;margin-bottom:6px}
+.modal h4{font-size:12px;color:var(--gold2);text-transform:uppercase;letter-spacing:.7px;
+  margin:18px 0 7px;border-bottom:1px solid var(--line);padding-bottom:5px}
+.modal p{font-size:14px;line-height:1.66;color:#d7dff2}
+table{width:100%;border-collapse:collapse;margin-top:4px;font-size:13px}
+th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--muted);font-weight:600;font-size:11.5px;text-transform:uppercase;letter-spacing:.4px}
+td.nm{font-weight:700;white-space:nowrap}
+td.tk{color:var(--gold);font-variant-numeric:tabular-nums;white-space:nowrap;font-size:12.5px}
+td.ro{color:#c2cce4;font-size:12.5px;line-height:1.5}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.chip{font-size:12px;padding:3px 10px;background:#14203f;border:1px solid var(--line);
+  border-radius:20px;color:#aebbdc}
+</style>
+</head>
+<body>
+<header>
+  <h1><span class="badge">OREUN</span>&nbsp; AI 파생 섹터맵 · 허브-스포크 그리드</h1>
+  <span class="sub">AI 진앙 → 7개 파생 가지 · 한국 관련주 98 (검증완료) · 2026-06-03 기준</span>
+</header>
+
+<!-- HUB -->
+<section class="hub" id="hub">
+  <div class="core"><b>AI</b><span>생성형 · 에이전틱</span></div>
+  <div class="htxt">
+    <div class="ph">진앙 · EPICENTER</div>
+    <h2>생성형·에이전틱 AI → 7개 파생 가지</h2>
+    <p id="hub-summary"></p>
+  </div>
+</section>
+
+<div class="legend" id="legend"></div>
+
+<!-- GRID -->
+<main class="grid" id="grid"></main>
+
+<div class="foot">
+  <div class="note">✓ 98종목 웹 검증 완료 (high 65 / medium 27 / low 6). 코드 정정: 케이엔솔→053080. 비상장: 한화세미텍·리벨리온. 폐지: HD현대인프라코어. <span style="color:#e8b84b">⚠</span> 표시는 AI 직접연관이 약한 종목으로, 발행 콘텐츠에서는 제외를 권장합니다.</div>
+</div>
+
+<!-- MODAL -->
+<div class="scrim" id="scrim">
+  <div class="modal" id="modal">
+    <div class="mbar" id="mbar"></div>
+    <button class="x" id="close" aria-label="닫기">&times;</button>
+    <div class="mbody" id="mbody"></div>
+  </div>
+</div>
+
+<script src="data.js"></script>
+<script>
+const cat = SECTOR_DATA.categories[0];
+const nodes = cat.children;
+const colors=["#d4af37","#ef8b3c","#37c3c3","#5b8cf0","#3fbf73","#a878e6","#e5607a"];
+const N = nodes.length;
+
+function shortName(s){return s.split('(')[0].trim();}
+function metaph(s){const m=s.match(/\(([^)]+)\)/);return m?m[1]:'';}
+const order={high:0,medium:1,low:2,unverified:3};
+function sortStocks(arr){return [...arr].sort((a,b)=>(order[a.confidence]??9)-(order[b.confidence]??9));}
+function tierTxt(t){return t===1?'1차 · 직접 파생':(t===2?'2차 파생':'히든 · 먼 파생');}
+
+// representative high stocks (listed, with ticker) — up to 4
+function repHigh(n){
+  const r=n.koreanStocks.filter(s=>s.confidence==='high'&&s.ticker).slice(0,4);
+  if(r.length) return r;
+  return n.koreanStocks.slice(0,4);
+}
+
+document.getElementById('hub-summary').textContent = cat.summary;
+
+// legend
+document.getElementById('legend').innerHTML =
+  nodes.map((n,i)=>`<span class="lg"><span class="dot" style="background:${colors[i]}"></span>${shortName(n.sector)}</span>`).join('')
+  + `<span class="lg"><span class="dash"></span>히든·먼 파생(점선)</span>`;
+
+// build grid cards
+const grid=document.getElementById('grid');
+nodes.forEach((n,i)=>{
+  const c=colors[i];
+  const hidden=(n.tier||1)>=3;
+  const reps=repHigh(n);
+  const repCount=n.koreanStocks.filter(s=>s.confidence==='high'&&s.ticker).length;
+  const repsHtml=reps.map(s=>{
+    const code=s.ticker?s.ticker:(s.market||'비상장');
+    return `<div class="stk"><span class="nm">${s.name}</span><span class="tk" style="color:${s.ticker?c:'#93a0c0'};${s.ticker?'':'font-style:italic'}">${code}</span></div>`;
+  }).join('');
+  const moreN=n.koreanStocks.length-reps.length;
+  const card=document.createElement('div');
+  card.className='card'+(hidden?' hidden':'');
+  card.setAttribute('data-i',i);
+  card.innerHTML=`
+    <div class="bar" style="background:${c}"></div>
+    ${hidden?'<span class="hbadge">히든</span>':''}
+    <div class="body">
+      <div class="top">
+        <h3 style="color:${c}">${shortName(n.sector)}</h3>
+        ${hidden?'':`<span class="num">${n.koreanStocks.length}종목</span>`}
+      </div>
+      <div class="meta" style="color:${c}">${metaph(n.sector)}${hidden?' · '+n.koreanStocks.length+'종목':''}</div>
+      <div class="nar">${n.narrative}</div>
+      <div class="reps">
+        <div class="rlabel">대표 종목 (high)</div>
+        ${repsHtml}
+        ${moreN>0?`<div class="more">+${moreN}종목 · 클릭하면 전체 보기</div>`:''}
+      </div>
+    </div>`;
+  card.addEventListener('click',()=>openModal(i));
+  grid.appendChild(card);
+});
+
+// modal
+const scrim=document.getElementById('scrim');
+const mbody=document.getElementById('mbody');
+const mbar=document.getElementById('mbar');
+
+function openModal(i){
+  const n=nodes[i], c=colors[i];
+  mbar.style.background=c;
+  const stocks=sortStocks(n.koreanStocks);
+  const rows=stocks.map(s=>{
+    const code=s.ticker?s.ticker:(s.market||'비상장');
+    const low=s.confidence==='low', un=!s.ticker;
+    const mark=low?' <span title="AI 직접연관 약함 — 검증 주의" style="color:#e8b84b">⚠</span>':'';
+    const dim=(low||un)?' style="opacity:.62"':'';
+    const cs=un?' style="color:#93a0c0;font-style:italic"':'';
+    return `<tr${dim}><td class="nm">${s.name}${mark}</td><td class="tk"${cs}>${code}</td><td class="ro">${s.role}</td></tr>`;
+  }).join('');
+  const chips=(n.globalPlayers||[]).map(g=>`<span class="chip">${g}</span>`).join('');
+  mbody.innerHTML=`
+    <div class="ph">AI 파생 가지 ${i+1} / ${N}</div>
+    <h2 style="color:${c}">${shortName(n.sector)}</h2>
+    <div class="mmeta" style="color:${c}">${metaph(n.sector)}</div>
+    <span class="tier" style="border-color:${c};color:${c}">${tierTxt(n.tier)}</span>
+    <h4>왜 AI에서 파생되는가 (Narrative)</h4><p>${n.narrative}</p>
+    ${n.hiddenMomentum?`<h4>히든 모멘텀</h4><p>${n.hiddenMomentum}</p>`:''}
+    <h4>한국 관련주 (${n.koreanStocks.length})</h4>
+    <table><tr><th>종목</th><th>코드</th><th>역할</th></tr>${rows}</table>
+    <h4>글로벌 플레이어</h4><div class="chips">${chips}</div>`;
+  scrim.classList.add('on');
+  mbody.parentElement.scrollTop=0;
+  document.body.style.overflow='hidden';
+}
+function closeModal(){scrim.classList.remove('on');document.body.style.overflow='';}
+document.getElementById('close').addEventListener('click',closeModal);
+scrim.addEventListener('click',e=>{if(e.target===scrim)closeModal();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
+</script>
+</body>
+</html>

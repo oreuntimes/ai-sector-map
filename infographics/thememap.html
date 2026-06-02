@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 파생 섹터맵 · 테마 구성맵 · A4 가로</title>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  @page { size: A4 landscape; margin: 0; }
+  :root{
+    --paper:#faf9f5; --ink:#1b1a16; --ink-2:#494740; --mute:#8d8a7f; --faint:#b7b3a7;
+    --line:#e9e6db; --line-2:#dcd8cb;
+    --acc:#0e7c66; --acc-deep:#0a5b49; --acc-tint:#e7f1ed; --acc-soft:#cde4dd;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{font-size:10.5pt}
+  body{
+    font-family:'Pretendard',sans-serif; background:#cbc8bf; color:var(--ink);
+    word-break:keep-all; -webkit-font-smoothing:antialiased;
+    display:flex; justify-content:center; padding:28px 18px 60px;
+    -webkit-print-color-adjust:exact; print-color-adjust:exact;
+  }
+  .gro{font-family:'Space Grotesk',sans-serif}
+  .controls{position:fixed; top:14px; right:16px; z-index:99; display:flex; align-items:stretch;
+    background:#fff; border:1px solid var(--line-2); box-shadow:0 8px 22px rgba(0,0,0,.22)}
+  .controls .b{padding:9px 13px; font:700 8.5pt/1 'Space Grotesk',sans-serif; letter-spacing:.16em;
+    color:var(--ink-2); display:flex; align-items:center; border-right:1px solid var(--line)}
+  .controls button{background:var(--acc); color:#fff; border:none; padding:9px 18px; cursor:pointer;
+    font:700 10pt/1 'Pretendard'; letter-spacing:.04em}
+  .controls button:hover{background:var(--acc-deep)}
+  .controls .h{padding:9px 13px; font:500 8.5pt/1 'Pretendard'; color:var(--mute); display:flex; align-items:center; letter-spacing:.04em}
+  .page{
+    width:297mm; height:210mm; background:var(--paper); position:relative; overflow:hidden;
+    padding:11mm 14mm 9mm; display:flex; flex-direction:column;
+    box-shadow:0 16px 44px rgba(30,28,18,.3);
+  }
+  .head{display:flex; justify-content:space-between; align-items:flex-end; gap:14mm; padding-bottom:4mm; border-bottom:2px solid var(--ink)}
+  .head .l .eye{display:flex; align-items:center; gap:8px; font:600 8pt/1 'Space Grotesk',sans-serif;
+    letter-spacing:.3em; color:var(--acc); text-transform:uppercase}
+  .head .l .eye::before{content:""; width:18px; height:2px; background:var(--acc)}
+  .head .l h1{font-family:'Pretendard',sans-serif; font-weight:800; font-size:30pt; line-height:1.0; letter-spacing:-.01em; margin:2.5mm 0 1.5mm}
+  .head .l .sub{font-size:10.5pt; font-weight:600; color:var(--ink-2)}
+  .head .l .sub b{color:var(--acc)}
+  .head .r{max-width:120mm; padding:4mm 5mm; background:var(--acc-tint); border-left:3px solid var(--acc)}
+  .head .r .tlab{font:700 7.5pt/1 'Space Grotesk',sans-serif; letter-spacing:.2em; color:var(--acc); text-transform:uppercase; margin-bottom:2mm}
+  .head .r p{font-size:9pt; line-height:1.5; color:var(--acc-deep); font-weight:500}
+  .chain{flex:1; display:grid; grid-template-columns:1fr 10mm 1fr 10mm 1fr; padding-top:4mm}
+  .col{display:flex; flex-direction:column}
+  .arrow{display:flex; align-items:flex-start; justify-content:center; padding-top:8mm}
+  .arrow span{font-family:'Space Grotesk',sans-serif; font-size:16pt; color:var(--acc-soft); font-weight:700}
+  .col-head{display:flex; align-items:baseline; gap:8px; padding-bottom:2.5mm; border-bottom:2px solid var(--ink)}
+  .col-no{font:700 13pt/1 'Space Grotesk',sans-serif; color:var(--acc)}
+  .col-nm{font-size:12.5pt; font-weight:800; letter-spacing:.01em}
+  .col-cnt{margin-left:auto; font:600 7pt/1 'Space Grotesk',sans-serif; letter-spacing:.08em; color:var(--mute); text-transform:uppercase}
+  .col-sub{font-size:7.6pt; color:var(--mute); margin:1.8mm 0 .8mm; letter-spacing:.01em}
+  .row{display:flex; flex-direction:column; gap:.8mm; padding:2.1mm 1mm; border-bottom:1px solid var(--line)}
+  .row:last-child{border-bottom:none}
+  .r-top{display:flex; align-items:center; gap:5px}
+  .nm{font-size:9.6pt; font-weight:700; letter-spacing:.01em}
+  .code{font:500 7pt/1 'Space Grotesk',sans-serif; color:var(--faint)}
+  .kw{margin-left:auto; font-size:7.2pt; font-weight:700; color:var(--acc-deep);
+    background:var(--acc-tint); border:1px solid var(--acc-soft); padding:1mm 2mm; border-radius:20px; white-space:nowrap}
+  .desc{font-size:7.7pt; line-height:1.38; color:var(--ink-2)}
+  .row.lead{background:linear-gradient(90deg,var(--acc-tint),transparent 85%); margin:0 -2mm; padding:2.3mm 2mm}
+  .row.lead .nm{font-size:10.5pt}
+  .row.lead .flag{font-size:6.6pt; font-weight:800; letter-spacing:.06em; color:#fff; background:var(--acc); padding:.8mm 1.8mm; border-radius:2px}
+  .row.weak .nm,.row.weak .desc{color:var(--mute)}
+  .row.weak .kw{color:var(--mute); background:transparent; border-color:var(--line-2)}
+  .foot{display:flex; justify-content:space-between; align-items:flex-end; gap:14px; padding-top:3mm; border-top:2px solid var(--ink); margin-top:2.5mm}
+  .foot .axis{display:flex; align-items:center; gap:6px; font:600 7.6pt/1 'Space Grotesk',sans-serif; letter-spacing:.08em; color:var(--mute)}
+  .foot .axis b{color:var(--acc); font-weight:700}
+  .foot .brand{font:700 9pt/1.5 'Space Grotesk',sans-serif; letter-spacing:.18em; color:var(--ink); text-align:right}
+  .foot .brand span{display:block; font-size:7pt; font-weight:400; letter-spacing:.1em; color:var(--faint); margin-top:1mm}
+  .foot .note{font-size:6.8pt; color:var(--faint); line-height:1.5; max-width:96mm; text-align:center}
+  @media print{
+    body{background:#fff; padding:0; display:block}
+    .controls{display:none}
+    .page{box-shadow:none; width:297mm; height:210mm}
+  }
+</style>
+</head>
+<body>
+  <div class="controls">
+    <span class="b">AI 파생 섹터맵 · A4</span>
+    <button onclick="window.print()">PDF 저장 / 인쇄</button>
+    <span class="h">A4 가로 · 297×210mm</span>
+  </div>
+
+  <div class="page">
+    <header class="head">
+      <div class="l">
+        <div class="eye">THEME MAP · AI 파생 7가지</div>
+        <h1>AI는 어디로 파생되는가</h1>
+        <div class="sub">7개 가지로 보는 AI 수혜 지도 (2026-06) &nbsp;·&nbsp; 수록 관련주 <b>62</b> &nbsp;·&nbsp; 3단계 축</div>
+      </div>
+      <div class="r">
+        <div class="tlab">Why now</div>
+        <p>단일 진앙(생성형·에이전틱 AI 연산 폭증)에서 '연산=자본=전기=구리=물' 등식이 연쇄 전이. 1차 진앙(칩·전력)→인프라(DC·광)→응용(로봇·SW)→최먼 역파생(히든)으로 차수가 깊어질수록 선반영이 적다.</p>
+      </div>
+    </header>
+
+    <div class="chain">
+      <!-- 01 진앙·1차 가지 -->
+      <section class="col">
+        <div class="col-head"><span class="col-no">01</span><span class="col-nm">진앙 · 1차 가지</span><span class="col-cnt">두뇌·혈류</span></div>
+        <div class="col-sub">연산이 가장 직접 전환 — 반도체(두뇌) + 전력(혈류)</div>
+        <div class="row lead">
+          <div class="r-top"><span class="nm">SK하이닉스</span><span class="code">000660</span><span class="flag">대표주</span><span class="kw">HBM 1위</span></div>
+          <div class="desc">HBM4 점유 54~55% 1위. 삼성전자(005930) HBM4 양산+2nm GAA와 함께 두뇌 축 대장.</div>
+        </div>
+        <div class="row">
+          <div class="r-top"><span class="nm">한미반도체</span><span class="code">042700</span><span class="kw">TC본더</span></div>
+          <div class="desc">HBM TC본더 1위. 한화세미텍(비상장) SK 진입. HPSP(403870)·원익IPS(240810) 장비.</div>
+        </div>
+        <div class="row">
+          <div class="r-top"><span class="nm">HD현대일렉트릭</span><span class="code">267260</span><span class="kw">변압기</span></div>
+          <div class="desc">초고압 변압기 톱티어. 효성중공업(298040)·LS ELECTRIC(010120)·일진전기(103590) 전력 3사축.</div>
+        </div>
+        <div class="row">
+          <div class="r-top"><span class="nm">두산에너빌리티</span><span class="code">034020</span><span class="kw">가스터빈·SMR</span></div>
+          <div class="desc">국산 대형 가스터빈·SMR. 한전기술(052690) 원전설계, 한국전력(015760) 송전 병목.</div>
+        </div>
+        <div class="row weak">
+          <div class="r-top"><span class="nm">풍산·POSCO홀딩스</span><span class="code">103140·005490</span><span class="kw">간접(매크로)</span></div>
+          <div class="desc">구리·방향성 전기강판(GOES) — 'AI 필수재' 리프레이밍 중이나 핵심동인은 매크로.</div>
+        </div>
+      </section>
+
+      <div class="arrow"><span>→</span></div>
+
+      <!-- 02 인프라 파생 -->
+      <section class="col">
+        <div class="col-head"><span class="col-no">02</span><span class="col-nm">인프라 파생</span><span class="col-cnt">신체·신경망</span></div>
+        <div class="col-sub">물리 공간·연결 — 데이터센터·냉각(신체) + 광통신(신경망)</div>
+        <div class="row lead">
+          <div class="r-top"><span class="nm">GST</span><span class="code">083450</span><span class="flag">대표주</span><span class="kw">액침냉각</span></div>
+          <div class="desc">국내 유일 2상 액침냉각. 케이엔솔(053080) Submer 파트너, 지엔씨에너지(119850) 비상발전.</div>
+        </div>
+        <div class="row">
+          <div class="r-top"><span class="nm">오이솔루션</span><span class="code">138080</span><span class="kw">광트랜시버</span></div>
+          <div class="desc">광트랜시버 1위, 800G/1.6T. 빛과전자(069540)·대한광통신(010170)·퀄리타스(432720) CPO.</div>
+        </div>
+        <div class="row">
+          <div class="r-top"><span class="nm">이수페타시스</span><span class="code">007660</span><span class="kw">MLB</span></div>
+          <div class="desc">AI 가속기·스위치용 초다층 기판. 대덕전자(353200)·두산(000150 CCL) 기판축.</div>
+        </div>
+        <div class="row">
+          <div class="r-top"><span class="nm">케이아이엔엑스</span><span class="code">093320</span><span class="kw">IX·IDC</span></div>
+          <div class="desc">국내 유일 중립 IX+IDC. 삼성에스디에스(018260) DC·HPC, 파이오링크(170790) DC 스위치.</div>
+        </div>
+        <div class="row weak">
+          <div class="r-top"><span class="nm">S-Oil·SK이노베이션</span><span class="code">010950·096770</span><span class="kw">watch</span></div>
+          <div class="desc">냉각유 신소재 전환 초기(실증 단계). 롯데에너지머티(020150) HVLP 동박도 양산 시점 확인.</div>
+        </div>
+      </section>
+
+      <div class="arrow"><span>→</span></div>
+
+      <!-- 03 응용·최먼 -->
+      <section class="col">
+        <div class="col-head"><span class="col-no">03</span><span class="col-nm">응용 · 최먼</span><span class="col-cnt">손발·지능·역파생</span></div>
+        <div class="col-sub">로봇(손발)+SW(지능)+히든 2차 파생(역파생)</div>
+        <div class="row lead">
+          <div class="r-top"><span class="nm">레인보우로보틱스</span><span class="code">277810</span><span class="flag">대표주</span><span class="kw">휴머노이드</span></div>
+          <div class="desc">삼성전자 35%, 휴머노이드 플랫폼. 두산로보틱스(454910)·에스비비테크(389500 감속기) 동반.</div>
+        </div>
+        <div class="row">
+          <div class="r-top"><span class="nm">에스피지·로보티즈</span><span class="code">058610·108490</span><span class="kw">감속기·구동</span></div>
+          <div class="desc">정밀감속기·액추에이터 양산 병목 국산화. 현대차(005380)·LG전자(066570) 대형 내재화.</div>
+        </div>
+        <div class="row">
+          <div class="r-top"><span class="nm">코난테크놀로지</span><span class="code">402030</span><span class="kw">LLM</span></div>
+          <div class="desc">코난 LLM·RAG. 솔트룩스(304100)·마음AI(377480)·NAVER(035420)·카카오(035720) 지능축.</div>
+        </div>
+        <div class="row">
+          <div class="r-top"><span class="nm">루닛 / 샌즈랩</span><span class="code">328130·411080</span><span class="kw">의료·보안AI</span></div>
+          <div class="desc">의료 영상진단(뷰노 338220)·AI 위협분석. 히든: 우주DC(쎄트렉아이 099320·한화시스템 272210).</div>
+        </div>
+        <div class="row weak">
+          <div class="r-top"><span class="nm">한국정보인증·아톤</span><span class="code">053300·158430</span><span class="kw">watch</span></div>
+          <div class="desc">딥페이크 탐지·생체인증 = 역파생(기대감 단계). CCU 롯데정밀화학(004000)도 2차 파생.</div>
+        </div>
+      </section>
+    </div>
+
+    <footer class="foot">
+      <div class="brand">OREUN TIMES<span>THEME MAP · AI-DERIV-01</span></div>
+      <div class="note">구성: AI 진앙→7가지→대표종목 3단계 압축 · 종목코드 SoT 기준 · 간접(매크로)=풍산·POSCO, watch=확인 필요, 비상장(한화세미텍·리벨리온)·폐지(HD현대인프라코어) 별도 · 유니온·EG·한화에어로·DB하이텍 제외 · 투자 권유 아님 · 2026-06-03 KST</div>
+      <div class="axis"><b>진앙·1차</b> → <b>인프라</b> → <b>응용·최먼</b></div>
+    </footer>
+  </div>
+</body>
+</html>

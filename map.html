@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI 파생 섹터 방사형 지도 | OREUN</title>
+<style>
+:root{
+  --bg:#0a0f1f; --bg2:#0e1730; --line:#1e2a4a;
+  --gold:#d4af37; --gold2:#caa83c; --ink:#e9eef9; --muted:#93a0c0;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Pretendard','Apple SD Gothic Neo',-apple-system,system-ui,sans-serif;
+  background:radial-gradient(circle at 32% 16%, #12193c 0%, #0a0f1f 64%);
+  color:var(--ink);min-height:100vh;}
+header{padding:16px 28px;border-bottom:1px solid var(--line);display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+header h1{font-size:20px;letter-spacing:.3px}
+header .badge{color:var(--gold);font-weight:800;letter-spacing:1px}
+header .sub{color:var(--muted);font-size:13px}
+.wrap{display:flex;height:calc(100vh - 60px)}
+@media(max-width:900px){.wrap{flex-direction:column;height:auto}}
+#stage{flex:1 1 60%;position:relative;min-height:560px}
+#map{width:100%;height:100%;display:block}
+#panel{flex:0 0 40%;max-width:540px;border-left:1px solid var(--line);
+  background:rgba(8,13,28,.66);padding:22px 24px;overflow-y:auto}
+@media(max-width:900px){#panel{max-width:none;border-left:none;border-top:1px solid var(--line);height:auto}}
+.link{fill:none}
+.node{cursor:pointer;transition:filter .18s}
+.node:hover{filter:brightness(1.13) drop-shadow(0 0 7px rgba(212,175,55,.45))}
+.node.sel{filter:drop-shadow(0 0 10px rgba(212,175,55,.6))}
+.node.sel rect{stroke-width:3}
+.node text{text-anchor:middle;pointer-events:none}
+.node tspan.t1{fill:var(--ink);font-size:13.5px;font-weight:700}
+.node tspan.t2{fill:var(--muted);font-size:10.5px;font-weight:500}
+.node tspan.t3{fill:#aeb9d6;font-size:10.5px;font-weight:600}
+.hub{cursor:pointer}
+.hub circle{fill:url(#hubgrad);stroke:var(--gold);stroke-width:2.2;filter:drop-shadow(0 0 16px rgba(212,175,55,.4))}
+.hub text{text-anchor:middle;pointer-events:none}
+.hub tspan.h1{fill:var(--gold);font-size:30px;font-weight:800;letter-spacing:1px}
+.hub tspan.h2{fill:#c3cde6;font-size:11px;font-weight:500}
+#panel .ph{color:var(--muted);font-size:12.5px;margin-bottom:8px;letter-spacing:.3px}
+#panel h2{font-size:23px;margin-bottom:4px;line-height:1.2}
+#panel .meta{font-size:14px;margin-bottom:12px;font-style:italic}
+.tier{display:inline-block;font-size:11px;padding:2px 10px;border:1px solid var(--gold);
+  color:var(--gold);border-radius:20px;margin-bottom:6px}
+#panel h3{font-size:12px;color:var(--gold2);text-transform:uppercase;letter-spacing:.7px;
+  margin:18px 0 7px;border-bottom:1px solid var(--line);padding-bottom:5px}
+#panel p{font-size:14px;line-height:1.66;color:#d7dff2}
+table{width:100%;border-collapse:collapse;margin-top:4px;font-size:13px}
+th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--muted);font-weight:600;font-size:11.5px;text-transform:uppercase;letter-spacing:.4px}
+td.nm{font-weight:700;white-space:nowrap}
+td.tk{color:var(--gold);font-variant-numeric:tabular-nums;white-space:nowrap;font-size:12.5px}
+td.ro{color:#c2cce4;font-size:12.5px;line-height:1.5}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.chip{font-size:12px;padding:3px 10px;background:#14203f;border:1px solid var(--line);
+  border-radius:20px;color:#aebbdc}
+.note{color:#e8b84b;font-size:12px;margin-top:16px;line-height:1.55;
+  background:rgba(232,184,75,.08);border:1px solid rgba(232,184,75,.25);border-radius:8px;padding:10px 12px}
+.legend{position:absolute;left:16px;bottom:14px;display:flex;flex-wrap:wrap;gap:6px 10px;max-width:64%}
+.legend .lg{font-size:11px;color:#aab6d6;display:flex;align-items:center;gap:5px}
+.legend .dot{width:9px;height:9px;border-radius:50%}
+.legend .dash{width:13px;height:0;border-top:2px dashed #e5607a}
+</style>
+</head>
+<body>
+<header>
+  <h1><span class="badge">OREUN</span>&nbsp; AI 파생 섹터 방사형 지도</h1>
+  <span class="sub">AI 진앙 → 7개 파생 가지 · 한국 관련주 98 (검증완료) · 2026-06-03 기준</span>
+</header>
+<div class="wrap">
+  <div id="stage">
+    <svg id="map" viewBox="0 0 1000 740" preserveAspectRatio="xMidYMid meet">
+      <defs>
+        <radialGradient id="hubgrad"><stop offset="0%" stop-color="#1d2b5a"/><stop offset="100%" stop-color="#0c1430"/></radialGradient>
+      </defs>
+    </svg>
+    <div class="legend" id="legend"></div>
+  </div>
+  <aside id="panel"></aside>
+</div>
+<script src="data.js"></script>
+<script>
+const SVGNS="http://www.w3.org/2000/svg";
+const cat = SECTOR_DATA.categories[0];
+const nodes = cat.children;
+const colors=["#d4af37","#ef8b3c","#37c3c3","#5b8cf0","#3fbf73","#a878e6","#e5607a"];
+const svg=document.getElementById('map');
+const panel=document.getElementById('panel');
+const cx=500, cy=360, R=256, N=nodes.length;
+
+function pos(i){
+  const ang=(-90 + i*360/N)*Math.PI/180;
+  return {x:cx+R*Math.cos(ang), y:cy+R*Math.sin(ang)};
+}
+function el(tag,attrs){const e=document.createElementNS(SVGNS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);return e;}
+function shortName(s){return s.split('(')[0].trim();}
+function metaph(s){const m=s.match(/\(([^)]+)\)/);return m?m[1]:'';}
+function topHigh(n){
+  const t=[...n.koreanStocks].filter(s=>s.confidence==='high'&&s.ticker).slice(0,2).map(s=>s.name);
+  return t.length?t.join(' · '):(n.koreanStocks[0]?n.koreanStocks[0].name:'—');
+}
+
+// curved links (center -> node, slight arc)
+nodes.forEach((n,i)=>{
+  const p=pos(i);
+  const mx=(cx+p.x)/2, my=(cy+p.y)/2;
+  const ux=p.x-cx, uy=p.y-cy, len=Math.hypot(ux,uy)||1;
+  const px=-uy/len, py=ux/len, off=24;
+  svg.appendChild(el('path',{d:`M${cx} ${cy} Q${mx+px*off} ${my+py*off} ${p.x} ${p.y}`,
+    class:'link',stroke:colors[i],'stroke-opacity':.5,'stroke-width':2}));
+});
+// nodes
+nodes.forEach((n,i)=>{
+  const p=pos(i), w=192, h=80;
+  const hidden=(n.tier||1)>=3;
+  const g=el('g',{class:'node','data-i':i});
+  const rect=el('rect',{x:p.x-w/2,y:p.y-h/2,width:w,height:h,rx:13,fill:'#0e1730',stroke:colors[i],'stroke-width':1.8});
+  if(hidden)rect.setAttribute('stroke-dasharray','5 3');
+  g.appendChild(rect);
+  const t=el('text',{x:p.x});
+  const l1=el('tspan',{x:p.x,y:p.y-22,class:'t1'});l1.textContent=shortName(n.sector);
+  const l2=el('tspan',{x:p.x,y:p.y-3,class:'t2'});l2.textContent=(hidden?'히든 · ':'')+n.koreanStocks.length+'개 · '+metaph(n.sector);
+  const l3=el('tspan',{x:p.x,y:p.y+18,class:'t3',fill:colors[i]});l3.textContent=topHigh(n);
+  t.append(l1,l2,l3);g.appendChild(t);
+  g.addEventListener('click',()=>show(i));
+  svg.appendChild(g);
+});
+// hub
+const hub=el('g',{class:'hub'});
+hub.appendChild(el('circle',{cx:cx,cy:cy,r:74}));
+const ht=el('text',{x:cx});
+const h1=el('tspan',{x:cx,y:cy-2,class:'h1'});h1.textContent='AI';
+const h2=el('tspan',{x:cx,y:cy+20,class:'h2'});h2.textContent='생성형 · 에이전틱';
+ht.append(h1,h2);hub.appendChild(ht);
+hub.addEventListener('click',overview);
+svg.appendChild(hub);
+
+// legend
+document.getElementById('legend').innerHTML=nodes.map((n,i)=>
+  `<span class="lg"><span class="dot" style="background:${colors[i]}"></span>${shortName(n.sector)}</span>`).join('')
+  +`<span class="lg"><span class="dash"></span>히든·먼 파생(점선)</span>`;
+
+function tierTxt(t){return t===1?'1차 · 직접 파생':(t===2?'2차 파생':'히든 · 먼 파생');}
+function markSel(i){document.querySelectorAll('.node').forEach(g=>g.classList.toggle('sel',+g.getAttribute('data-i')===i));}
+
+function show(i){
+  markSel(i);
+  const n=nodes[i];
+  const order={high:0,medium:1,low:2,unverified:3};
+  const stocks=[...n.koreanStocks].sort((a,b)=>(order[a.confidence]??9)-(order[b.confidence]??9));
+  const rows=stocks.map(s=>{
+    const code=s.ticker?s.ticker:(s.market||'비상장');
+    const low=s.confidence==='low', un=!s.ticker;
+    const mark=low?' <span title="AI 직접연관 약함 — 검증 주의" style="color:#e8b84b">⚠</span>':'';
+    const dim=(low||un)?' style="opacity:.62"':'';
+    const cs=un?' style="color:#93a0c0;font-style:italic"':'';
+    return `<tr${dim}><td class="nm">${s.name}${mark}</td><td class="tk"${cs}>${code}</td><td class="ro">${s.role}</td></tr>`;
+  }).join('');
+  const chips=(n.globalPlayers||[]).map(g=>`<span class="chip">${g}</span>`).join('');
+  panel.innerHTML=`
+    <div class="ph">AI 파생 가지 ${i+1} / ${N}</div>
+    <h2 style="color:${colors[i]}">${shortName(n.sector)}</h2>
+    <div class="meta" style="color:${colors[i]}">${metaph(n.sector)}</div>
+    <span class="tier" style="border-color:${colors[i]};color:${colors[i]}">${tierTxt(n.tier)}</span>
+    <h3>왜 AI에서 파생되는가 (Narrative)</h3><p>${n.narrative}</p>
+    ${n.hiddenMomentum?`<h3>히든 모멘텀</h3><p>${n.hiddenMomentum}</p>`:''}
+    <h3>한국 관련주 (${n.koreanStocks.length})</h3>
+    <table><tr><th>종목</th><th>코드</th><th>역할</th></tr>${rows}</table>
+    <h3>글로벌 플레이어</h3><div class="chips">${chips}</div>`;
+  panel.scrollTop=0;
+}
+function overview(){
+  markSel(-1);
+  const list=nodes.map((n,i)=>
+    `<tr><td class="nm" style="color:${colors[i]};cursor:pointer" onclick="show(${i})">${shortName(n.sector)}</td><td class="tk">${n.koreanStocks.length}개</td><td class="ro">${metaph(n.sector)}</td></tr>`).join('');
+  panel.innerHTML=`
+    <div class="ph">전체 구조 · OVERVIEW</div>
+    <h2 style="color:var(--gold)">AI 파생 방사형 지도</h2>
+    <div class="meta" style="color:var(--gold)">생성형·에이전틱 AI 진앙 → 7개 파생 가지</div>
+    <h3>통합 내러티브</h3><p>${cat.summary}</p>
+    <h3>7개 파생 가지 (클릭)</h3>
+    <table><tr><th>가지</th><th>종목</th><th>은유</th></tr>${list}</table>
+    <div class="note">✓ 98종목 웹 검증 완료 (high 65 / medium 27 / low 6). 코드 정정: 케이엔솔→053080. 비상장: 한화세미텍·리벨리온. 폐지: HD현대인프라코어. <span style="color:#e8b84b">⚠</span> 표시는 AI 직접연관이 약한 종목으로, 발행 콘텐츠에서는 제외를 권장합니다.</div>`;
+}
+overview();
+</script>
+</body>
+</html>
